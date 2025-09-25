@@ -6,6 +6,8 @@ import br.com.alura.ScreenMatch.model.DadosTemporada;
 import br.com.alura.ScreenMatch.model.Episodios;
 import br.com.alura.ScreenMatch.services.ConsumoAPI;
 import br.com.alura.ScreenMatch.services.ConverteDados;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +15,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MenuUsuario {
+    private static final Logger log = LoggerFactory.getLogger(MenuUsuario.class);
     //Variáveis:
 
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
@@ -29,10 +32,11 @@ public class MenuUsuario {
     public void exibirMenu(){
         System.out.println("Digite o nome da Série para a busca: ");
         buscaSerie = scanner.nextLine();
-        var consumoAPI = new ConsumoAPI();
-        var json = consumoAPI.devolverDados(ENDERECO + buscaSerie.replace(" ", "+") + API_KEY);
-        DadosSerie dadosSerie = converteDados.obterdados(json, DadosSerie.class);
-        System.out.println(dadosSerie);
+        try {
+            var consumoAPI = new ConsumoAPI();
+            var json = consumoAPI.devolverDados(ENDERECO + buscaSerie.replace(" ", "+") + API_KEY);
+            DadosSerie dadosSerie = converteDados.obterdados(json, DadosSerie.class);
+            System.out.println(dadosSerie);
 
         List<DadosTemporada> temporadas = new ArrayList<>();
 
@@ -61,11 +65,40 @@ public class MenuUsuario {
                 .forEach(System.out::println);
 
 
-//        List<Episodios> listaEpisodios = temporadas.stream().
-//                flatMap(t -> t.episodios().stream()
-//                        .map(d -> new Episodios(t.temporada(), d)))
-//                .collect(Collectors.toList());
-//
+        System.out.println("Digite um trecho do Título para uma busca mais precisa!: ");
+        var trechoTitulo = scanner.nextLine();
+
+        Optional<DadosEpisodio> episodioBuscado = dadosEpisodios.stream()
+                .filter(e -> e.tituloEpisodio().toUpperCase().contains(trechoTitulo.toUpperCase()))
+                .findFirst();
+        if(episodioBuscado.isPresent()){
+            System.out.println("Episodio encontrado: " + episodioBuscado.get().tituloEpisodio());
+            System.out.println("Temporada: " + episodioBuscado.get().temporada());
+            System.out.println("Avaliacao: " + episodioBuscado.get().avaliacaoEpisodio());
+        }else{
+            System.out.println("Episódio não encontrado!");
+        }
+        List<Episodios> listaEpisodios = temporadas.stream().
+               flatMap(t -> t.episodios().stream()
+                        .map(d -> new Episodios(t.temporada(), d)))
+                .collect(Collectors.toList());
+
+        Map<Integer, Double> avaliacoesPorTemporada = listaEpisodios.stream()
+                .filter(e -> e.getAvaliacao() > 0.0)
+                .collect(Collectors.groupingBy(Episodios::getNumeroTemporada,
+                         Collectors.averagingDouble(Episodios::getAvaliacao)));
+
+        System.out.println(avaliacoesPorTemporada);
+
+        DoubleSummaryStatistics est = listaEpisodios.stream()
+                .filter(e -> e.getAvaliacao() > 0.0)
+                .collect(Collectors.summarizingDouble(Episodios::getAvaliacao));
+        System.out.println("Média de Avaliações das temporadas: " + est.getAverage());
+        }catch (NullPointerException e){
+            System.out.println("Nome não encontrado!");
+            System.exit(1);
+        }
+
 //        listaEpisodios.forEach(System.out::println);
 //
 //        System.out.println("Defina um ANO mínimo para visualizar os episódios em diante: ");
