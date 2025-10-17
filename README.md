@@ -1,3 +1,8 @@
+📘 Projeto desenvolvido acompanhando o Curso de Java: consumindo API, gravando arquivos e lidando com erros da ALURA!.
+🎯 Objetivo: aprender a consumir APIs, manipular JSON e salvar dados em arquivo.
+🧠 Tecnologias: Java, Gson, API HTTP
+
+
 📺 ScreenMatch (Spring Boot sem Web)
 
 Projeto desenvolvido durante o curso da Alura para praticar Spring Boot, consumo de APIs externas e manipulação de dados em Java.
